@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Job Search HQ">
+<title>Job Search Command Centre</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'DM Sans', sans-serif; background: #f8f9fb; color: #1a1a1a; line-height: 1.5; }
+  .root { max-width: 600px; margin: 0 auto; padding: 20px 16px 80px; }
+  .header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: #0f172a; }
+  .subtitle { font-size: 12px; color: #64748b; margin-top: 4px; }
+  .nav { display: flex; gap: 0; border-bottom: 2px solid #e2e8f0; margin: 20px 0; position: sticky; top: 0; background: #f8f9fb; z-index: 10; }
+  .nav button { padding: 10px 16px; font-size: 13px; font-weight: 400; color: #64748b; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .nav button.active { font-weight: 600; color: #0f172a; border-bottom-color: #0f172a; }
+  .stats-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+  .stat { padding: 12px 14px; border-radius: 10px; }
+  .stat-num { font-size: 26px; font-weight: 700; line-height: 1; }
+  .stat-label { font-size: 10px; color: #64748b; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .card { background: #fff; border: 1px solid #e8ecf0; border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; }
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .company-name { font-size: 15px; font-weight: 600; color: #0f172a; }
+  .role-label { font-size: 12px; color: #64748b; margin-left: 6px; }
+  .stages { display: flex; gap: 3px; margin-top: 8px; flex-wrap: wrap; }
+  .stage-pill { font-size: 11px; padding: 3px 7px; border-radius: 6px; border: none; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .stage-pill.active { color: #fff; font-weight: 600; }
+  .stage-pill.inactive { background: #f1f5f9; color: #94a3b8; font-weight: 400; }
+  .next-info { margin-top: 8px; font-size: 12px; color: #64748b; }
+  .edit-grid { margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .edit-grid textarea { grid-column: 1 / -1; }
+  input, select, textarea { width: 100%; padding: 8px 10px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px; font-family: inherit; outline: none; background: #fff; }
+  textarea { min-height: 50px; resize: vertical; }
+  .btn { padding: 8px 16px; font-size: 13px; font-weight: 500; border-radius: 6px; cursor: pointer; font-family: inherit; border: 1px solid #d1d5db; background: #fff; color: #374151; }
+  .btn-primary { border: none; background: #0f172a; color: #fff; }
+  .btn-danger { color: #dc2626; border-color: #fecaca; }
+  .btn-small { padding: 4px 10px; font-size: 11px; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .section-header h2 { font-size: 16px; font-weight: 600; }
+  .ws-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; margin-top: 16px; }
+  .ws-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .ws-label { font-size: 13px; font-weight: 600; }
+  .ws-count { font-size: 11px; color: #94a3b8; }
+  .check-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px; margin-bottom: 6px; cursor: pointer; border: 1px solid #f0f0f0; background: #fafbfc; transition: all 0.15s; }
+  .check-row.done { background: #f0fdf4; border-color: #bbf7d0; }
+  .checkbox { width: 18px; height: 18px; border-radius: 4px; border: 2px solid #cbd5e1; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; color: #fff; font-weight: 700; }
+  .checkbox.checked { border-color: #16a34a; background: #16a34a; }
+  .check-label { font-size: 13px; flex: 1; }
+  .check-label.done { color: #6b7280; text-decoration: line-through; }
+  .cat-badge { font-size: 10px; padding: 2px 7px; border-radius: 4px; background: #f1f5f9; color: #64748b; font-weight: 500; white-space: nowrap; }
+  .time-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #fef3c7; color: #92400e; font-weight: 500; white-space: nowrap; }
+  .progress-bar { height: 6px; border-radius: 3px; background: #e2e8f0; overflow: hidden; margin-top: 6px; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.3s ease; }
+  .empty-state { text-align: center; padding: 40px; color: #94a3b8; font-size: 14px; }
+  .add-form { border: 2px solid #0f172a !important; }
+  .add-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .playbook h2 { font-size: 18px; font-weight: 700; color: #0f172a; margin-top: 28px; }
+  .playbook h2:first-child { margin-top: 0; }
+  .playbook h3 { font-size: 14px; font-weight: 600; margin: 0 0 6px; }
+  .playbook p { margin: 0 0 6px; font-size: 13px; line-height: 1.7; color: #334155; }
+  .playbook .stages-text { font-size: 12px; color: #64748b; margin: 0; }
+  .playbook .card { margin-top: 10px; }
+  .hidden { display: none; }
+  @media (max-width: 400px) {
+    .stats-row { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .add-grid { grid-template-columns: 1fr; }
+    .edit-grid { grid-template-columns: 1fr; }
+    .edit-grid textarea { grid-column: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="root" id="app">
+  <div class="header">
+    <h1>Job Search Command Centre</h1>
+    <div class="subtitle" id="header-subtitle"></div>
+  </div>
+  <div class="nav">
+    <button class="active" onclick="switchView('pipeline')">Pipeline</button>
+    <button onclick="switchView('daily')">Daily Tasks</button>
+    <button onclick="switchView('playbook')">Playbook</button>
+  </div>
+  <div id="view-pipeline"></div>
+  <div id="view-daily" class="hidden"></div>
+  <div id="view-playbook" class="hidden playbook"></div>
+</div>
+
+<script>
+const WORKSTREAMS = {
+  WS1: { label: "No Listing \u2013 Network In", color: "#2D6A4F" },
+  WS2: { label: "Active Listing \u2013 Apply & Connect", color: "#1B4965" },
+  WS3: { label: "Referral Pipeline", color: "#7B2D8B" },
+  WS4: { label: "Recruiter / Headhunter", color: "#B44215" },
+};
+
+const STAGES = {
+  WS1: [
+    { id: "identify", label: "Identify Contact", icon: "\uD83D\uDD0D" },
+    { id: "connect", label: "Connection Sent", icon: "\uD83D\uDD17" },
+    { id: "accepted", label: "Accepted", icon: "\u2705" },
+    { id: "message", label: "Message Sent", icon: "\uD83D\uDCAC" },
+    { id: "coffee", label: "Coffee Chat Booked", icon: "\u2615" },
+    { id: "chatted", label: "Chat Done", icon: "\uD83E\uDD1D" },
+    { id: "referral", label: "Referral / Lead", icon: "\u2B50" },
+  ],
+  WS2: [
+    { id: "found", label: "Listing Found", icon: "\uD83D\uDCCB" },
+    { id: "researched", label: "Company Researched", icon: "\uD83D\uDD0E" },
+    { id: "applied", label: "Applied", icon: "\uD83D\uDCE8" },
+    { id: "connect_ws2", label: "Insider Connected", icon: "\uD83D\uDD17" },
+    { id: "insight", label: "Got Insight", icon: "\uD83D\uDCA1" },
+    { id: "interview", label: "Interview Stage", icon: "\uD83C\uDFA4" },
+    { id: "offer", label: "Offer / Negotiation", icon: "\uD83C\uDFC6" },
+  ],
+  WS3: [
+    { id: "ref_identify", label: "Referrer Identified", icon: "\uD83D\uDC64" },
+    { id: "ref_reached", label: "Reached Out", icon: "\uD83D\uDCE9" },
+    { id: "ref_briefed", label: "Briefed Them", icon: "\uD83D\uDCDD" },
+    { id: "ref_submitted", label: "Referral Submitted", icon: "\uD83D\uDCE4" },
+    { id: "ref_tracking", label: "Tracking Progress", icon: "\uD83D\uDCCA" },
+  ],
+  WS4: [
+    { id: "rec_identify", label: "Recruiter Found", icon: "\uD83C\uDFAF" },
+    { id: "rec_connect", label: "Connected", icon: "\uD83D\uDD17" },
+    { id: "rec_brief", label: "Brief Shared", icon: "\uD83D\uDCC4" },
+    { id: "rec_active", label: "Actively Working", icon: "\u26A1" },
+    { id: "rec_intro", label: "Intro Made", icon: "\uD83E\uDD1D" },
+  ],
+};
+
+const DAILY_TASKS = [
+  { id: "d1", label: "Check job boards (LinkedIn, company careers pages)", minutes: 15, category: "Discovery" },
+  { id: "d2", label: "Send 2\u20133 personalised LinkedIn connection requests", minutes: 15, category: "Outreach" },
+  { id: "d3", label: "Follow up on pending connections / messages (2\u20133)", minutes: 10, category: "Follow-up" },
+  { id: "d4", label: "Customise and submit 1 application", minutes: 30, category: "Apply" },
+  { id: "d5", label: "Update tracker with new progress", minutes: 5, category: "Admin" },
+  { id: "d6", label: "Engage with 3 posts from target contacts", minutes: 10, category: "Visibility" },
+  { id: "d7", label: "Research 1 company deeply (culture, team, strategy)", minutes: 15, category: "Prep" },
+];
+
+const WEEKLY_TASKS = [
+  { id: "w1", label: "Publish or share 1 LinkedIn post (thought leadership)", category: "Brand" },
+  { id: "w2", label: "Review and refresh target company list", category: "Strategy" },
+  { id: "w3", label: "Prep for upcoming coffee chats / interviews", category: "Prep" },
+  { id: "w4", label: "Audit pipeline \u2013 move stale leads, add new ones", category: "Admin" },
+  { id: "w5", label: "Reach out to 1 recruiter or headhunter", category: "Outreach" },
+];
+
+const CONVERSATION_STAGES = ["coffee","chatted","referral","insight","interview","offer"];
+const INTERVIEW_STAGES = ["interview","offer"];
+
+let companies = [];
+let dailyChecks = {};
+let weeklyChecks = {};
+let editingId = null;
+let showAddForm = false;
+let currentView = "pipeline";
+
+function getTodayKey() { return new Date().toISOString().split("T")[0]; }
+function getWeekKey() {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  return new Date(new Date(d).setDate(diff)).toISOString().split("T")[0];
+}
+
+function load() {
+  try { const d = JSON.parse(localStorage.getItem("jobsearch-data") || "{}"); companies = d.companies || []; } catch { companies = []; }
+  try { dailyChecks = JSON.parse(localStorage.getItem("daily-" + getTodayKey()) || "{}"); } catch { dailyChecks = {}; }
+  try { weeklyChecks = JSON.parse(localStorage.getItem("weekly-" + getWeekKey()) || "{}"); } catch { weeklyChecks = {}; }
+}
+
+function saveCompanies() { localStorage.setItem("jobsearch-data", JSON.stringify({ companies })); }
+function saveDaily() { localStorage.setItem("daily-" + getTodayKey(), JSON.stringify(dailyChecks)); }
+function saveWeekly() { localStorage.setItem("weekly-" + getWeekKey(), JSON.stringify(weeklyChecks)); }
+
+function switchView(v) {
+  currentView = v;
+  document.querySelectorAll(".nav button").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".nav button").forEach(b => { if (b.textContent.toLowerCase().includes(v === "pipeline" ? "pipeline" : v === "daily" ? "daily" : "playbook")) b.classList.add("active"); });
+  document.getElementById("view-pipeline").classList.toggle("hidden", v !== "pipeline");
+  document.getElementById("view-daily").classList.toggle("hidden", v !== "daily");
+  document.getElementById("view-playbook").classList.toggle("hidden", v !== "playbook");
+  render();
+}
+
+function render() {
+  const dailyDone = DAILY_TASKS.filter(t => dailyChecks[t.id]).length;
+  document.getElementById("header-subtitle").textContent = `${getTodayKey()} \u00B7 ${companies.length} companies tracked \u00B7 ${dailyDone}/${DAILY_TASKS.length} tasks today`;
+
+  if (currentView === "pipeline") renderPipeline();
+  if (currentView === "daily") renderDaily();
+  if (currentView === "playbook") renderPlaybook();
+}
+
+function renderPipeline() {
+  const el = document.getElementById("view-pipeline");
+  const inConvo = companies.filter(c => CONVERSATION_STAGES.includes(c.stage)).length;
+  const inInterview = companies.filter(c => INTERVIEW_STAGES.includes(c.stage)).length;
+  const dailyDone = DAILY_TASKS.filter(t => dailyChecks[t.id]).length;
+
+  let html = `
+    <div class="stats-row">
+      <div class="stat" style="background:#0f172a0a;border:1px solid #0f172a22"><div class="stat-num" style="color:#0f172a">${companies.length}</div><div class="stat-label">Companies</div></div>
+      <div class="stat" style="background:#2D6A4F0a;border:1px solid #2D6A4F22"><div class="stat-num" style="color:#2D6A4F">${inConvo}</div><div class="stat-label">In Conversation</div></div>
+      <div class="stat" style="background:#1B49650a;border:1px solid #1B496522"><div class="stat-num" style="color:#1B4965">${inInterview}</div><div class="stat-label">Interview Stage</div></div>
+      <div class="stat" style="background:#7B2D8B0a;border:1px solid #7B2D8B22"><div class="stat-num" style="color:#7B2D8B">${dailyDone}/${DAILY_TASKS.length}</div><div class="stat-label">Today's Tasks</div></div>
+    </div>
+    <div class="section-header">
+      <h2>Pipeline</h2>
+      <button class="btn btn-primary" onclick="toggleAddForm()">+ Add Company</button>
+    </div>`;
+
+  if (showAddForm) {
+    html += `
+    <div class="card add-form">
+      <div class="add-grid">
+        <input id="new-name" placeholder="Company name">
+        <select id="new-ws">
+          ${Object.entries(WORKSTREAMS).map(([k,v]) => `<option value="${k}">${v.label}</option>`).join("")}
+        </select>
+        <input id="new-role" placeholder="Target role">
+        <input id="new-contacts" placeholder="Contact name(s)">
+      </div>
+      <input id="new-next" placeholder="Next action" style="margin-bottom:10px">
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="addCompany()">Add</button>
+        <button class="btn" onclick="toggleAddForm()">Cancel</button>
+      </div>
+    </div>`;
+  }
+
+  const grouped = {};
+  Object.keys(WORKSTREAMS).forEach(ws => { grouped[ws] = companies.filter(c => c.workstream === ws); });
+
+  Object.entries(WORKSTREAMS).forEach(([wsKey, ws]) => {
+    const cos = grouped[wsKey];
+    if (!cos.length) return;
+    html += `
+      <div class="ws-header">
+        <div class="ws-dot" style="background:${ws.color}"></div>
+        <span class="ws-label" style="color:${ws.color}">${ws.label}</span>
+        <span class="ws-count">(${cos.length})</span>
+      </div>`;
+
+    cos.forEach(c => {
+      const wsStages = STAGES[c.workstream];
+      const currentIdx = wsStages.findIndex(s => s.id === c.stage);
+      const isEditing = editingId === c.id;
+
+      html += `<div class="card">
+        <div class="card-header">
+          <div><span class="company-name">${esc(c.name)}</span>${c.role ? `<span class="role-label">${esc(c.role)}</span>` : ""}</div>
+          <button class="btn btn-small" onclick="toggleEdit('${c.id}')">${isEditing ? "Close" : "Edit"}</button>
+        </div>
+        <div class="stages">`;
+
+      wsStages.forEach((s, i) => {
+        const active = i <= currentIdx;
+        html += `<button class="stage-pill ${active ? "active" : "inactive"}" style="${active ? `background:${ws.color}` : ""}" onclick="setStage('${c.id}','${s.id}')" title="${s.label}">${s.icon}${i === currentIdx ? " " + s.label : ""}</button>`;
+      });
+
+      html += `</div>`;
+
+      if ((c.nextAction || c.contacts) && !isEditing) {
+        html += `<div class="next-info">`;
+        if (c.nextAction) html += `<div>\u2192 <strong>Next:</strong> ${esc(c.nextAction)} ${c.nextDate ? `<span class="time-badge">${c.nextDate}</span>` : ""}</div>`;
+        if (c.contacts) html += `<div style="margin-top:2px">\uD83D\uDC64 ${esc(c.contacts)}</div>`;
+        html += `</div>`;
+      }
+
+      if (isEditing) {
+        html += `
+        <div class="edit-grid">
+          <input value="${esc(c.contacts)}" placeholder="Contact(s)" onchange="updateField('${c.id}','contacts',this.value)">
+          <input value="${esc(c.role)}" placeholder="Role" onchange="updateField('${c.id}','role',this.value)">
+          <input value="${esc(c.nextAction)}" placeholder="Next action" onchange="updateField('${c.id}','nextAction',this.value)">
+          <input type="date" value="${c.nextDate||""}" onchange="updateField('${c.id}','nextDate',this.value)">
+          <textarea placeholder="Notes" onchange="updateField('${c.id}','notes',this.value)">${esc(c.notes)}</textarea>
+          <select onchange="changeWorkstream('${c.id}',this.value)">
+            ${Object.entries(WORKSTREAMS).map(([k,v]) => `<option value="${k}" ${k===c.workstream?"selected":""}>${v.label}</option>`).join("")}
+          </select>
+          <button class="btn btn-danger" onclick="removeCompany('${c.id}')">Remove</button>
+        </div>`;
+      }
+
+      html += `</div>`;
+    });
+  });
+
+  if (!companies.length) {
+    html += `<div class="empty-state">No companies yet. Tap "+ Add Company" to start building your pipeline.</div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+function renderDaily() {
+  const el = document.getElementById("view-daily");
+  const dailyDone = DAILY_TASKS.filter(t => dailyChecks[t.id]).length;
+  const pct = Math.round((dailyDone / DAILY_TASKS.length) * 100);
+  const barColor = pct === 100 ? "#16a34a" : "#0f172a";
+
+  let html = `
+    <div style="margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <h2 style="font-size:16px;font-weight:600">Today's Routine</h2>
+        <span style="font-size:13px;color:${pct===100?"#16a34a":"#64748b"}">${pct}% done</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${barColor}"></div></div>
+      <p style="font-size:12px;color:#94a3b8;margin-top:6px">~100 minutes total. Best done in 2 blocks: morning (discovery + outreach) and evening (follow-up + admin).</p>
+    </div>`;
+
+  DAILY_TASKS.forEach(t => {
+    const done = dailyChecks[t.id];
+    html += `
+    <div class="check-row ${done?"done":""}" onclick="toggleDaily('${t.id}')">
+      <div class="checkbox ${done?"checked":""}">${done?"\u2713":""}</div>
+      <span class="check-label ${done?"done":""}">${t.label}</span>
+      <span class="cat-badge">${t.category}</span>
+      <span class="time-badge">${t.minutes}m</span>
+    </div>`;
+  });
+
+  html += `<h2 style="font-size:16px;font-weight:600;margin:28px 0 12px">This Week</h2>`;
+
+  WEEKLY_TASKS.forEach(t => {
+    const done = weeklyChecks[t.id];
+    html += `
+    <div class="check-row ${done?"done":""}" onclick="toggleWeekly('${t.id}')">
+      <div class="checkbox ${done?"checked":""}">${done?"\u2713":""}</div>
+      <span class="check-label ${done?"done":""}">${t.label}</span>
+      <span class="cat-badge">${t.category}</span>
+    </div>`;
+  });
+
+  el.innerHTML = html;
+}
+
+function renderPlaybook() {
+  const el = document.getElementById("view-playbook");
+  el.innerHTML = `
+    <h2 style="margin-top:0">The Four Workstreams</h2>
+    <div class="card" style="border-left:3px solid ${WORKSTREAMS.WS1.color}">
+      <h3 style="color:${WORKSTREAMS.WS1.color}">WS1: No Listing \u2013 Network In</h3>
+      <p>For companies where you'd love to work but there's no open role. The goal is to build a warm relationship so you hear about roles before they're posted \u2013 or create one.</p>
+      <p class="stages-text"><strong>Stages:</strong> Identify contact \u2192 Send connection \u2192 Accepted \u2192 Message with context \u2192 Coffee chat \u2192 Build ongoing relationship \u2192 Get referral or inside lead</p>
+    </div>
+    <div class="card" style="border-left:3px solid ${WORKSTREAMS.WS2.color}">
+      <h3 style="color:${WORKSTREAMS.WS2.color}">WS2: Active Listing \u2013 Apply & Connect</h3>
+      <p>A role exists. You apply formally AND work the inside track simultaneously. The connection gives you insight into what the hiring manager actually wants, and potentially a nudge on your application.</p>
+      <p class="stages-text"><strong>Stages:</strong> Listing found \u2192 Company research \u2192 Apply \u2192 Connect with insider \u2192 Get insight on team/role \u2192 Interview stages \u2192 Offer/negotiation</p>
+    </div>
+    <div class="card" style="border-left:3px solid ${WORKSTREAMS.WS3.color}">
+      <h3 style="color:${WORKSTREAMS.WS3.color}">WS3: Referral Pipeline</h3>
+      <p>People in your existing network who work at target companies or know people who do. These are warmer leads \u2013 ex-colleagues, alumni, industry contacts. You're asking them to refer you or make an introduction.</p>
+      <p class="stages-text"><strong>Stages:</strong> Identify referrer \u2192 Reach out \u2192 Brief them on what you're looking for \u2192 They submit referral \u2192 Track progress</p>
+    </div>
+    <div class="card" style="border-left:3px solid ${WORKSTREAMS.WS4.color}">
+      <h3 style="color:${WORKSTREAMS.WS4.color}">WS4: Recruiter / Headhunter Channel</h3>
+      <p>Executive search firms and specialist recruiters working in your space. They hold mandates you'll never see on job boards.</p>
+      <p class="stages-text"><strong>Stages:</strong> Identify recruiter \u2192 Connect \u2192 Share your brief \u2192 They actively work \u2192 Intro to hiring company</p>
+    </div>
+
+    <h2>Daily Rhythm (~100 mins)</h2>
+    <div class="card">
+      <p><strong>Morning block (45 mins):</strong> Scan job boards for new listings. Send 2\u20133 personalised connection requests. Research 1 company deeply.</p>
+      <p><strong>Midday (10 mins):</strong> Engage with 3 posts from people at target companies. Brief, thoughtful comments \u2013 not "Great post!"</p>
+      <p><strong>Evening block (45 mins):</strong> Follow up on pending connections. Customise and submit 1 application. Update your tracker.</p>
+    </div>
+
+    <h2>Weekly Rhythm</h2>
+    <div class="card">
+      <p><strong>Monday:</strong> Audit the pipeline. Move stale entries, add new targets, update stages.</p>
+      <p><strong>Midweek:</strong> Publish a LinkedIn post. Keep it active with thought leadership around AI in marketing, media effectiveness, or data-driven creative.</p>
+      <p><strong>Friday:</strong> Reach out to 1 new recruiter. Prep for the following week's coffee chats or interviews.</p>
+      <p style="margin:0"><strong>Ongoing:</strong> Review and refresh your target company list. Aim to always have 15\u201320 companies across all workstreams.</p>
+    </div>
+
+    <h2>Key Principles</h2>
+    <div class="card">
+      <p><strong>Dual-track every application.</strong> Never just apply. Always find someone inside to connect with.</p>
+      <p><strong>Personalise every message.</strong> Reference their work, a recent post, something specific about the company.</p>
+      <p><strong>Follow up at 5\u20137 days.</strong> One follow-up is professional. Two is persistent. Three is too many.</p>
+      <p><strong>Track everything.</strong> If it's not in the tracker, it doesn't exist.</p>
+      <p style="margin:0"><strong>Aim for 2\u20133 coffee chats per week</strong> once your pipeline is warm. That's the leading indicator of progress.</p>
+    </div>`;
+}
+
+function esc(s) { if (!s) return ""; const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+
+function toggleAddForm() { showAddForm = !showAddForm; render(); }
+
+function addCompany() {
+  const name = document.getElementById("new-name").value.trim();
+  if (!name) return;
+  const ws = document.getElementById("new-ws").value;
+  companies.push({
+    id: Date.now().toString(),
+    name,
+    workstream: ws,
+    stage: STAGES[ws][0].id,
+    contacts: document.getElementById("new-contacts").value,
+    role: document.getElementById("new-role").value,
+    notes: "",
+    nextAction: document.getElementById("new-next").value,
+    nextDate: "",
+    lastUpdated: getTodayKey(),
+  });
+  saveCompanies();
+  showAddForm = false;
+  render();
+}
+
+function toggleEdit(id) { editingId = editingId === id ? null : id; render(); }
+
+function setStage(id, stageId) {
+  const c = companies.find(x => x.id === id);
+  if (c) { c.stage = stageId; c.lastUpdated = getTodayKey(); saveCompanies(); render(); }
+}
+
+function updateField(id, field, value) {
+  const c = companies.find(x => x.id === id);
+  if (c) { c[field] = value; c.lastUpdated = getTodayKey(); saveCompanies(); }
+}
+
+function changeWorkstream(id, ws) {
+  const c = companies.find(x => x.id === id);
+  if (c) { c.workstream = ws; c.stage = STAGES[ws][0].id; c.lastUpdated = getTodayKey(); saveCompanies(); render(); }
+}
+
+function removeCompany(id) {
+  companies = companies.filter(c => c.id !== id);
+  editingId = null;
+  saveCompanies();
+  render();
+}
+
+function toggleDaily(id) { dailyChecks[id] = !dailyChecks[id]; saveDaily(); render(); }
+function toggleWeekly(id) { weeklyChecks[id] = !weeklyChecks[id]; saveWeekly(); render(); }
+
+load();
+render();
+</script>
+</body>
+</html>
